@@ -1,0 +1,30 @@
+﻿@baseUrl = https://weatherstation-m2xzi7kvvmqeq.azurewebsites.net
+
+### Start weather image generation
+GET {{baseUrl}}/api/CreateImages
+Content-Type: application/json
+
+### Check job status
+GET {{baseUrl}}/api/status/{{jobId}}
+Content-Type: application/json
+
+### Example responses:
+
+### CreateImages Response
+# {
+#     "jobId": "12345678-1234-5678-1234-567812345678",
+#     "message": "Processing 35 weather stations",
+#     "statusUrl": "/api/status/12345678-1234-5678-1234-567812345678"
+# }
+
+### Status Response
+# {
+#     "jobId": "12345678-1234-5678-1234-567812345678",
+#     "imageUrls": [
+#         "https://storage-account.blob.core.windows.net/weather-images/12345678-1234-5678-1234-567812345678/station-name.jpg"
+#     ],
+#     "isComplete": true,
+#     "createdAt": "2024-11-07T14:30:00Z",
+#     "totalImages": 35,
+#     "completedImages": 35
+# }
