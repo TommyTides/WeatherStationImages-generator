@@ -26,18 +26,15 @@ public class ProcessImageFunction
     }
 
     [Function("ProcessImage")]
-    public async Task RunAsync([QueueTrigger("start-processing")] string messageContent)
+    public async Task RunAsync([QueueTrigger("image-process")] string messageContent)
     {
-        _logger.LogInformation("Received message: {MessageContent}", messageContent);
+        _logger.LogInformation("Received image processing request: {MessageContent}", messageContent);
 
         try
         {
-            var request = JsonSerializer.Deserialize<ImageGenerationRequest>(
+            var request = JsonSerializer.Deserialize<ImageProcessRequest>(
                 messageContent,
-                new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true
-                });
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
             if (request == null)
             {
@@ -45,7 +42,9 @@ public class ProcessImageFunction
                 throw new InvalidOperationException("Message could not be deserialized");
             }
 
-            _logger.LogInformation("Processing station: {StationName} for job: {JobId}",
+            _logger.LogInformation("Processing image {Index}/{Total} for station: {Station} (Job: {JobId})",
+                request.ImageIndex,
+                request.TotalImages,
                 request.WeatherData.StationName,
                 request.JobId);
 
@@ -57,30 +56,29 @@ public class ProcessImageFunction
                 ImageUrls = new List<string> { imageUrl },
                 IsComplete = false,
                 TotalImages = request.TotalImages,
-                CompletedImages = 1
+                CompletedImages = 1,
+                CreatedAt = DateTime.UtcNow
             };
 
             var statusMessage = JsonSerializer.Serialize(status);
-            await _completeQueueClient.SendMessageAsync(Base64Encode(statusMessage));
+            await _completeQueueClient.SendMessageAsync(Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(statusMessage)));
 
-            _logger.LogInformation("Successfully processed image for station: {StationName}",
-                request.WeatherData.StationName);
+            _logger.LogInformation(
+                "Successfully processed image {Index}/{Total} for station: {Station} (Job: {JobId})",
+                request.ImageIndex,
+                request.TotalImages,
+                request.WeatherData.StationName,
+                request.JobId);
         }
         catch (JsonException ex)
         {
             _logger.LogError(ex, "JSON Deserialization error. Message content: {MessageContent}", messageContent);
-            throw; // Let the function fail so we can see the error in the poison queue
+            throw;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error processing message: {MessageContent}", messageContent);
-            throw; // Let the function fail so we can see the error in the poison queue
+            _logger.LogError(ex, "Error processing image request. Message content: {MessageContent}", messageContent);
+            throw;
         }
-    }
-
-    private static string Base64Encode(string plainText)
-    {
-        var plainTextBytes = System.Text.Encoding.UTF8.GetBytes(plainText);
-        return Convert.ToBase64String(plainTextBytes);
     }
 }
