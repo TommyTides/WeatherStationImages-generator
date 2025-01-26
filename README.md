@@ -6,42 +6,19 @@
 
 A serverless application that generates weather visualization images for Dutch weather stations using Azure Functions and the Buienradar API.
 
-## 🌟 Features
-
-- **Real-time Weather Data**: Integration with Buienradar API for live Dutch weather information
-- **Parallel Processing**: Asynchronous image generation using Azure Queue Storage
-- **Serverless Architecture**: Scalable Azure Functions implementation
-- **Continuous Deployment**: Automated deployment pipeline using Azure DevOps
-- **Status Tracking**: Real-time progress monitoring through REST API
-- **Infrastructure as Code**: Complete Azure infrastructure defined in Bicep
-
-## 🏗️ Architecture
-
-```mermaid
-graph LR
-    A[HTTP Trigger] --> B[Queue Storage]
-    B --> C[Queue Trigger]
-    C --> D[Blob Storage]
-    E[Status API] --> F[Table Storage]
-    C -.-> E
-```
-
 ## 🚀 Tech Stack
 
 - **.NET 8.0** - Latest LTS version
 - **Azure Functions** - Serverless compute
-- **Azure Storage** - Queues, Blobs, and Tables
+- **Azure Storage** - Queues and Blobs
 - **Azure DevOps** - CI/CD Pipeline
 - **Bicep** - Infrastructure as Code
 - **SixLabors.ImageSharp** - Image processing
 
 ## 💡 Key Design Principles
-
-- **Serverless Architecture**: Pay-per-use model with automatic scaling
 - **Asynchronous Processing**: Non-blocking operations for better performance
 - **SOLID Principles**: Clean code architecture with dependency injection
 - **Infrastructure as Code**: Reproducible deployments using Bicep
-- **Monitoring & Logging**: Application Insights integration
 
 ## 📊 API Endpoints
 
@@ -49,7 +26,7 @@ graph LR
 # Generate Weather Images
 GET /api/CreateImages
 
-# Check Generation Status
+# Check Generation Status + Fetch Images
 GET /api/status/{jobId}
 ```
 
@@ -57,7 +34,6 @@ GET /api/status/{jobId}
 
 - Azurite
 - .NET 8.0 SDK
-- Cosmos DB Emulator
 - Azure Storage Explorer   
 - Visual Studio 2022 (recommended)
 
