@@ -10,7 +10,7 @@ namespace WeatherStationImages.Functions;
 public class ProcessImageFunction
 {
     private readonly IImageService _imageService;
-    private readonly QueueClient _completeQueueClient;
+    private readonly QueueClient _imageCompleteQueue;
     private readonly ILogger<ProcessImageFunction> _logger;
 
     public ProcessImageFunction(
@@ -21,8 +21,8 @@ public class ProcessImageFunction
         _logger = loggerFactory.CreateLogger<ProcessImageFunction>();
 
         var connectionString = Environment.GetEnvironmentVariable("AzureWebJobsStorage");
-        _completeQueueClient = new QueueClient(connectionString, "image-complete");
-        _completeQueueClient.CreateIfNotExists();
+        _imageCompleteQueue = new QueueClient(connectionString, "image-complete");
+        _imageCompleteQueue.CreateIfNotExists();
     }
 
     [Function("ProcessImage")]
@@ -42,42 +42,28 @@ public class ProcessImageFunction
                 throw new InvalidOperationException("Message could not be deserialized");
             }
 
-            _logger.LogInformation("Processing image {Index}/{Total} for station: {Station} (Job: {JobId})",
-                request.ImageIndex,
-                request.TotalImages,
+            _logger.LogInformation("Processing station: {Station} for job: {JobId}",
                 request.WeatherData.StationName,
                 request.JobId);
 
             var imageUrl = await _imageService.GenerateAndUploadImageAsync(request.WeatherData, request.JobId);
 
-            var status = new JobStatus
+            var jobStatus = new JobStatus
             {
                 JobId = request.JobId,
                 ImageUrls = new List<string> { imageUrl },
-                IsComplete = false,
-                TotalImages = request.TotalImages,
-                CompletedImages = 1,
-                CreatedAt = DateTime.UtcNow
+                TotalImages = request.TotalImages
             };
 
-            var statusMessage = JsonSerializer.Serialize(status);
-            await _completeQueueClient.SendMessageAsync(Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(statusMessage)));
+            var statusMessage = JsonSerializer.Serialize(jobStatus);
+            await _imageCompleteQueue.SendMessageAsync(Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(statusMessage)));
 
-            _logger.LogInformation(
-                "Successfully processed image {Index}/{Total} for station: {Station} (Job: {JobId})",
-                request.ImageIndex,
-                request.TotalImages,
-                request.WeatherData.StationName,
-                request.JobId);
-        }
-        catch (JsonException ex)
-        {
-            _logger.LogError(ex, "JSON Deserialization error. Message content: {MessageContent}", messageContent);
-            throw;
+            _logger.LogInformation("Successfully processed image for station: {StationName}",
+                request.WeatherData.StationName);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error processing image request. Message content: {MessageContent}", messageContent);
+            _logger.LogError(ex, "Error processing image request: {MessageContent}", messageContent);
             throw;
         }
     }

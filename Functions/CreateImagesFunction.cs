@@ -30,16 +30,16 @@ public class CreateImagesFunction
         try
         {
             // Validate API Key
-            var (isValid, errorResponse) = await ApiKeyAuthHandler.ValidateApiKeyAsync(req);
-            if (!isValid)
+            var authResult = await ApiKeyAuthHandler.ValidateApiKeyAsync(req);
+            if (!authResult.IsValid)
             {
-                return errorResponse!;
+                return authResult.ErrorResponse!;
             }
 
             var jobId = Guid.NewGuid().ToString();
             _logger.LogInformation("Creating new weather processing job: {JobId}", jobId);
 
-            // Create and send weather fetch request
+            // Create and queue weather fetch request
             var weatherFetchRequest = new WeatherFetchRequest { JobId = jobId };
             var message = JsonSerializer.Serialize(weatherFetchRequest);
             var base64Message = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(message));
@@ -47,12 +47,12 @@ public class CreateImagesFunction
             await _weatherFetchQueue.SendMessageAsync(base64Message);
             _logger.LogInformation("Weather fetch request queued for job: {JobId}", jobId);
 
-            var response = req.CreateResponse(HttpStatusCode.OK);
+            var response = req.CreateResponse(HttpStatusCode.Accepted);
             await response.WriteAsJsonAsync(new
             {
                 jobId,
                 message = "Weather data fetch initiated",
-                statusUrl = $"/api/status/{jobId}"
+                imagesUrl = $"/api/images/{jobId}"
             });
 
             return response;
@@ -60,9 +60,9 @@ public class CreateImagesFunction
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error initiating weather processing");
-            var errorResponse = req.CreateResponse(HttpStatusCode.InternalServerError);
-            await errorResponse.WriteStringAsync($"An error occurred: {ex.Message}");
-            return errorResponse;
+            var response = req.CreateResponse(HttpStatusCode.InternalServerError);
+            await response.WriteStringAsync($"An error occurred: {ex.Message}");
+            return response;
         }
     }
 }

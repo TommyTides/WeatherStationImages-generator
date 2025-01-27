@@ -32,17 +32,15 @@ public class WeatherFetchFunction
     [Function("WeatherFetch")]
     public async Task RunAsync([QueueTrigger("weather-fetch")] string messageContent)
     {
-        _logger.LogInformation("Weather fetch function processing message: {messageContent}", messageContent);
-
-        var request = JsonSerializer.Deserialize<WeatherFetchRequest>(messageContent);
-        if (request == null)
-        {
-            _logger.LogError("Failed to deserialize weather fetch request");
-            return;
-        }
-
         try
         {
+            var request = JsonSerializer.Deserialize<WeatherFetchRequest>(messageContent);
+            if (request == null)
+            {
+                _logger.LogError("Failed to deserialize weather fetch request");
+                return;
+            }
+
             _logger.LogInformation("Fetching weather data from Buienradar for job {JobId}", request.JobId);
             var buienradarResponse = await _httpClient.GetStringAsync(BUIENRADAR_URL);
             var weatherDataList = _weatherService.ParseWeatherData(buienradarResponse);
@@ -57,21 +55,20 @@ public class WeatherFetchFunction
                 {
                     JobId = request.JobId,
                     WeatherData = weatherDataList[i],
-                    TotalImages = totalImages,
-                    ImageIndex = i + 1
+                    TotalImages = totalImages
                 };
 
                 var message = JsonSerializer.Serialize(imageRequest);
                 var base64Message = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(message));
                 await _imageProcessQueue.SendMessageAsync(base64Message);
 
-                _logger.LogInformation("Queued image processing task {Current}/{Total} for station {Station}",
-                    i + 1, totalImages, weatherDataList[i].StationName);
+                _logger.LogInformation("Queued image processing task for station {Station}",
+                    weatherDataList[i].StationName);
             }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error processing weather data for job {JobId}", request.JobId);
+            _logger.LogError(ex, "Error processing weather data: {MessageContent}", messageContent);
             throw;
         }
     }

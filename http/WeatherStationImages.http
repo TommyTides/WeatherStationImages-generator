@@ -1,14 +1,12 @@
-﻿@baseUrl = http://localhost:7081
+﻿# @baseUrl = http://localhost:7081
+@baseUrl = https://weatherstation-m2xzi7kvvmqeq.azurewebsites.net
 @apiKey = securesecretkey
-@jobId = 7d9f4fee-296b-47d5-9939-a9fbfcd638a4
+@jobId = 679f167c-9713-47dc-8703-b0970297de75
 
 ### Create Images Job
 GET {{baseUrl}}/api/CreateImages
 X-API-Key: {{apiKey}}
 
-### Check Status (Replace {jobId} with actual job ID from previous response)
-GET {{baseUrl}}/api/status/{{jobId}}
+### Get Generated Images (Replace {jobId} with actual job ID from previous response)
+GET {{baseUrl}}/api/images/{{jobId}}
 X-API-Key: {{apiKey}}
-
-### Test Without API Key (Should fail)
-GET {{baseUrl}}/api/CreateImages

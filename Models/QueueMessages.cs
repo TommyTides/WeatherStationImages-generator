@@ -25,7 +25,4 @@ public class ImageProcessRequest
 
     [JsonPropertyName("totalImages")]
     public int TotalImages { get; set; }
-
-    [JsonPropertyName("imageIndex")]
-    public int ImageIndex { get; set; }
 }
