@@ -1,12 +1,14 @@
-﻿# @baseUrl = http://localhost:7081
+﻿# It may take some time for the generated images to be available. 
+# You can check the status of the job and get the generated images.
+# @baseUrl = http://localhost:7081
 @baseUrl = https://weatherstation-m2xzi7kvvmqeq.azurewebsites.net
 @apiKey = securesecretkey
-@jobId = 679f167c-9713-47dc-8703-b0970297de75
+@jobId = 37d43521-2858-4a53-b9a3-f617bf6761a9
 
 ### Create Images Job
 GET {{baseUrl}}/api/CreateImages
 X-API-Key: {{apiKey}}
 
 ### Get Generated Images (Replace {jobId} with actual job ID from previous response)
-GET {{baseUrl}}/api/images/{{jobId}}
+GET {{baseUrl}}/api/images/{{jobId}} # May take some time for the images to show up but the request itself will still work.
 X-API-Key: {{apiKey}}

@@ -37,19 +37,20 @@ public class GetImagesFunction
             _jobImages.TryGetValue(jobId, out imageUrls);
         }
 
-        if (imageUrls == null || !imageUrls.Any())
-        {
-            var notFoundResponse = req.CreateResponse(HttpStatusCode.NotFound);
-            await notFoundResponse.WriteStringAsync($"No images found for job ID {jobId}");
-            return notFoundResponse;
-        }
-
         var response = req.CreateResponse(HttpStatusCode.OK);
-        await response.WriteAsJsonAsync(new { jobId, images = imageUrls });
+        await response.WriteAsJsonAsync(new
+        {
+            jobId,
+            imagesProcessed = imageUrls?.Count ?? 0,
+            images = imageUrls ?? new List<string>(),
+            message = imageUrls == null
+                ? "No images processed yet"
+                : $"Found {imageUrls.Count} processed images"
+        });
+
         return response;
     }
 
-    // Queue trigger to collect generated image URLs
     [Function("CollectImageUrl")]
     public void CollectImageUrl([QueueTrigger("image-complete")] JobStatus newStatus)
     {
@@ -66,8 +67,10 @@ public class GetImagesFunction
                 _jobImages[newStatus.JobId] = new List<string>();
             }
             _jobImages[newStatus.JobId].AddRange(newStatus.ImageUrls);
-            _logger.LogInformation("Added {Count} images for job {JobId}",
-                newStatus.ImageUrls.Count, newStatus.JobId);
+            _logger.LogInformation("Added {Count} images for job {JobId}. Total images so far: {Total}",
+                newStatus.ImageUrls.Count,
+                newStatus.JobId,
+                _jobImages[newStatus.JobId].Count);
         }
     }
 }
