@@ -43,7 +43,6 @@ GET /api/status/{jobId}
 # Deploy infrastructure
 ./infrastructure/deploy.ps1 -resourceGroupName "weather-rg" -location "westeurope"
 ```
-
 ## 🔗 Links 🔗
 
 - [Buienradar API](https://www.buienradar.nl/overbuienradar/gratis-weerdata)
