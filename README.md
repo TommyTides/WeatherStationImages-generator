@@ -4,7 +4,7 @@
 [![.NET 8.0](https://img.shields.io/badge/.NET-8.0-512BD4?style=flat&logo=.net)](https://dotnet.microsoft.com/download/dotnet/8.0)
 [![Azure DevOps](https://img.shields.io/badge/Azure%20DevOps-Pipeline-0078D7?style=flat&logo=azure-devops)](https://azure.microsoft.com/en-us/products/devops/)
 
-A serverless application that generates weather visualization images for Dutch weather stations using Azure Functions and the Buienradar API.
+A serverless application that generates weather visualization images for Dutch weather stations using Azure Functions and the Buienradar API..
 
 ## 🚀 Tech Stack
 
